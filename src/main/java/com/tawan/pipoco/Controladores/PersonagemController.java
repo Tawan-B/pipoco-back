@@ -1,8 +1,8 @@
 package com.tawan.pipoco.Controladores;
 
 import java.util.List;
-import java.util.Optional;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,7 +13,7 @@ import com.tawan.pipoco.Services.PersonagemService;
 @RequestMapping("/personagens")
 public class PersonagemController {
 
-    private PersonagemService personagemService;
+    private final PersonagemService personagemService;
 
     public PersonagemController(PersonagemService personagemService) {
         this.personagemService = personagemService;
@@ -21,20 +21,14 @@ public class PersonagemController {
 
     @GetMapping
     public ResponseEntity<List<Personagem>> listarTodos() {
-
         return ResponseEntity.ok(personagemService.listarTodos());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Personagem> listarPorId(@PathVariable Long id) {
-
-        Optional<Personagem> personagem = personagemService.listarPorId(id);
-
-        if (personagem.isPresent()) {
-            return ResponseEntity.ok(personagem.get());
-        }
-
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<Personagem> listarPorId(@PathVariable String id) {
+        return personagemService.listarPorId(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping
@@ -42,21 +36,22 @@ public class PersonagemController {
 
         Personagem novoPersonagem = personagemService.criarPersonagem(personagem);
 
-        return ResponseEntity.status(201).body(novoPersonagem);
+        return ResponseEntity.status(HttpStatus.CREATED).body(novoPersonagem);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Personagem> atualizarPersonagem(@PathVariable Long id, @RequestBody Personagem personagem) {
+    public ResponseEntity<Personagem> atualizarPersonagem(@PathVariable String id, @RequestBody Personagem personagem) {
 
-        Personagem personagemAtualizado = personagemService.atualizarPersonagem(id, personagem);
-
-        return ResponseEntity.ok(personagemAtualizado);
+        return personagemService.atualizarPersonagem(id, personagem)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletarPersonagem(@PathVariable Long id) {
-
-        personagemService.deletarPersonagem(id);
+    public ResponseEntity<Void> deletarPersonagem(@PathVariable String id) {
+        if (!personagemService.deletarPersonagem(id)) {
+            return ResponseEntity.notFound().build();
+        }
 
         return ResponseEntity.noContent().build();
     }

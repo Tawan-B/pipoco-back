@@ -11,7 +11,7 @@ import com.tawan.pipoco.Repositorios.PersonagemRepository;
 @Service
 public class PersonagemService {
 
-    private PersonagemRepository personagemRepository;
+    private final PersonagemRepository personagemRepository;
 
     public PersonagemService(PersonagemRepository personagemRepository) {
         this.personagemRepository = personagemRepository;
@@ -21,22 +21,30 @@ public class PersonagemService {
         return personagemRepository.findAll();
     }
 
-    public Optional<Personagem> listarPorId(Long id) {
+    public Optional<Personagem> listarPorId(String id) {
         return personagemRepository.findById(id);
     }
 
     public Personagem criarPersonagem(Personagem personagem) {
+        personagem.setId(null);
         return personagemRepository.save(personagem);
     }
 
-    public Personagem atualizarPersonagem(Long id, Personagem personagem) {
+    public Optional<Personagem> atualizarPersonagem(
+            String id, Personagem personagem) {
 
-        personagem.setId(id);
-
-        return personagemRepository.save(personagem);
+        return personagemRepository.findById(id).map(personagemExistente -> {
+            personagem.setId(id);
+            return personagemRepository.save(personagem);
+        });
     }
 
-    public void deletarPersonagem(Long id) {
+    public boolean deletarPersonagem(String id) {
+        if (!personagemRepository.existsById(id)) {
+            return false;
+        }
+
         personagemRepository.deleteById(id);
+        return true;
     }
 }

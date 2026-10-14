@@ -11,7 +11,7 @@ import com.tawan.pipoco.Repositorios.UsuarioRepository;
 @Service
 public class UsuarioService {
 
-    private UsuarioRepository usuarioRepository;
+    private final UsuarioRepository usuarioRepository;
 
     public UsuarioService(UsuarioRepository usuarioRepository) {
         this.usuarioRepository = usuarioRepository;
@@ -21,22 +21,28 @@ public class UsuarioService {
         return usuarioRepository.findAll();
     }
 
-    public Optional<Usuario> listarPorId(Long id) {
+    public Optional<Usuario> listarPorId(String id) {
         return usuarioRepository.findById(id);
     }
 
     public Usuario criarUsuario(Usuario usuario) {
+        usuario.setId(null);
         return usuarioRepository.save(usuario);
     }
 
-    public Usuario atualizarUsuario(Long id, Usuario usuario) {
-
-        usuario.setId(id);
-
-        return usuarioRepository.save(usuario);
+    public Optional<Usuario> atualizarUsuario(String id, Usuario usuario) {
+        return usuarioRepository.findById(id).map(usuarioExistente -> {
+            usuario.setId(id);
+            return usuarioRepository.save(usuario);
+        });
     }
 
-    public void deletarUsuario(Long id) {
+    public boolean deletarUsuario(String id) {
+        if (!usuarioRepository.existsById(id)) {
+            return false;
+        }
+
         usuarioRepository.deleteById(id);
+        return true;
     }
 }
